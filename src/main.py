@@ -54,12 +54,7 @@ def main() -> None:
     add_task(async_sleeper(seconds=2), lambda: print(f"Callback 2!"))
     add_task(
         async_sleeper(seconds=3),
-        lambda: add_task(
-            async_sleeper(seconds=1),
-            lambda: add_task(
-                async_sleeper(seconds=1), lambda: print(f"Nested Callback!")
-            ),
-        ),
+        lambda: add_task(async_sleeper(seconds=1), lambda: print(f"Callback 3!")),
     )
 
     run()
