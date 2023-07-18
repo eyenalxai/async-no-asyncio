@@ -2,13 +2,14 @@ import asyncio
 
 from aiohttp import ClientSession
 
+from config import PORT
+
 
 async def main() -> None:
-    port = 8002
-    number_of_requests = 1
+    number_of_requests = 100
 
     async def send_request(*, _session: ClientSession) -> None:
-        async with _session.get(f"http://localhost:{port}") as response:
+        async with _session.get(f"http://localhost:{PORT}") as response:
             print(await response.text())
 
     async with ClientSession() as session:
