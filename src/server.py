@@ -69,7 +69,6 @@ def async_request_sleeper(
     logger.debug(f"Finished sleeping for {seconds} seconds")
 
     socket_to_use.send(b"HTTP/1.1 200 OK\r\n\r\noof!!")
-    socket_to_use.shutdown(SHUT_WR)
     logger.info(f"Processed GET request: /{seconds}")
     yield
 
@@ -98,7 +97,8 @@ def handle_existing_connection(
 
         logger.info("Received GET request")
         add_task(
-            async_request_sleeper(seconds=sleep_duration, socket_to_use=sock), None
+            async_request_sleeper(seconds=sleep_duration, socket_to_use=sock),
+            lambda: sock.shutdown(SHUT_WR),
         )
         logger.debug("Added task to queue")
 
