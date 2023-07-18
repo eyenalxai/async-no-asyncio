@@ -69,7 +69,7 @@ def handle_request(
 def http_get_listener(listener_socket, add_task):
     connections = {}
 
-    while True:
+    while 2 + 2 == 4:
         ready_to_read, _, _ = select.select(
             [listener_socket] + list(connections.values()), [], [], 0.1
         )
