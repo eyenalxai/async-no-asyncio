@@ -1,26 +1,27 @@
 from collections.abc import Callable, Generator
 from time import time
-from typing import Any
+from typing import Any, TypeAlias
+
+Task: TypeAlias = Callable[[], Any]
 
 
-def task(generator: Generator) -> Callable[[], Any]:
+def task(generator: Generator) -> Task:
     def runner() -> Any:
         return next(generator)
 
     return runner
 
 
-def scheduler() -> (
-    tuple[
-        Callable[[Generator[Any, Any, Any], Callable[[], Any] | None], None],
-        Callable[[], None],
-    ]
-):
+Callback: TypeAlias = Callable[[], Any]
+AddTask: TypeAlias = Callable[[Generator[Any, Any, Any], Callback | None], None]
+Run: TypeAlias = Callable[[], None]
+Scheduler: TypeAlias = tuple[AddTask, Run]
+
+
+def scheduler() -> Scheduler:
     task_queue: list[tuple[Callable[[], Any], Callable[[], Any] | None]] = []
 
-    def add_task(
-        generator: Generator, callback: Callable[[], Any] | None = None
-    ) -> None:
+    def add_task(generator: Generator, callback: Callback | None = None) -> None:
         task_queue.append((task(generator), callback))
 
     def run() -> None:
