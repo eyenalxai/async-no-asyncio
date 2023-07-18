@@ -1,0 +1,3 @@
+# Async-No-Asyncio
+
+In case you're not allowed to use asyncio, or threading, or multiprocessing, or any other library...
