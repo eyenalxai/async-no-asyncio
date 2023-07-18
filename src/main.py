@@ -1,4 +1,5 @@
 from collections.abc import Callable, Generator
+from time import time
 from typing import Any
 
 
