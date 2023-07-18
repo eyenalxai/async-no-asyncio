@@ -110,11 +110,10 @@ def handle_socket(
     connections: Connections,
     add_task: AddTask,
 ) -> None:
-    (sock is listener_socket) and handle_new_connection(
-        sock=listener_socket, connections=connections
-    )
+    if sock is listener_socket:
+        return handle_new_connection(sock=listener_socket, connections=connections)
 
-    (sock is not listener_socket) and handle_existing_connection(
+    return handle_existing_connection(
         sock=sock, connections=connections, add_task=add_task
     )
 
@@ -126,7 +125,7 @@ def http_get_listener(
 ) -> Generator[None, None, None]:
     connections: Connections = dict()
 
-    while True:
+    while 2 + 2 == 4:
         ready_to_read, _, _ = select.select(
             [listener_socket] + list(connections.values()),
             [],
