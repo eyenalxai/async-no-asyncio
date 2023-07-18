@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "zonticio"
+name = "async-no-asyncio"
 version = "0.1.0"
 description = ""
 authors = ["Sax Dhiut <mail@iyxeyl.me>"]
