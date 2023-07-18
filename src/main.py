@@ -11,11 +11,16 @@ def task(generator: Generator) -> Callable[[], Any]:
 
 
 def scheduler() -> (
-    tuple[Callable[[Generator, Callable[[Any], Any]], None], Callable[[], None]]
+    tuple[
+        Callable[[Generator[Any, Any, Any], Callable[[], Any] | None], None],
+        Callable[[], None],
+    ]
 ):
-    task_queue: list[tuple[Callable[[], Any], Callable[[], None]]] = []
+    task_queue: list[tuple[Callable[[], Any], Callable[[], Any] | None]] = []
 
-    def add_task(generator: Generator, callback: Callable[[], Any]) -> None:
+    def add_task(
+        generator: Generator, callback: Callable[[], Any] | None = None
+    ) -> None:
         task_queue.append((task(generator), callback))
 
     def run() -> None:
@@ -25,12 +30,13 @@ def scheduler() -> (
                 current_task()
                 task_queue.append((current_task, current_callback))
             except StopIteration:
-                current_callback()
+                if current_callback:
+                    current_callback()
 
     return add_task, run
 
 
-def async_sleeper(*, seconds: int) -> Generator:
+def async_sleeper(*, seconds: int) -> Generator[None, None, None]:
     end_time = time() + seconds
     print(f"Task sleeping for {seconds} seconds")
 
