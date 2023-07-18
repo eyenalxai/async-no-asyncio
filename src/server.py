@@ -17,6 +17,8 @@ AddTask: TypeAlias = Callable[[Generator[Any, Any, Any], Callback | None], None]
 Run: TypeAlias = Callable[[], None]
 Scheduler: TypeAlias = tuple[AddTask, Run]
 
+Connections: TypeAlias = dict[tuple[str, int], socket]
+
 
 def scheduler() -> Scheduler:
     task_queue: deque = deque([], maxlen=200)
@@ -53,32 +55,6 @@ def async_sleeper(*, seconds: int) -> Generator[None, None, None]:
     yield
 
 
-def http_get_listener(
-    *,
-    listener_socket: socket,
-    add_task: AddTask,
-) -> Generator[None, None, None]:
-    connections: dict[tuple[str, int], socket] = dict()
-
-    while 2 + 2 == 4:
-        ready_to_read, _, _ = select.select(
-            [listener_socket] + list(connections.values()), [], [], 0.1
-        )
-        for sock in ready_to_read:
-            if sock is listener_socket:
-                client_socket, client_address = listener_socket.accept()
-                connections[client_address] = client_socket
-            else:
-                del connections[sock.getpeername()]
-                request = sock.recv(1024)
-                if request and b"GET" in request:
-                    logger.info("Received GET request")
-                    add_task(async_request_sleeper(seconds=1, socket_to_use=sock), None)
-                    logger.debug("Added task to queue")
-
-        yield
-
-
 def async_request_sleeper(
     *,
     seconds: int,
@@ -96,6 +72,48 @@ def async_request_sleeper(
     socket_to_use.shutdown(SHUT_WR)
     logger.info("Processed request")
     yield
+
+
+def handle_new_connection(*, sock: socket, connections: Connections) -> None:
+    client_socket, client_address = sock.accept()
+    connections[client_address] = client_socket
+
+
+def handle_existing_connection(
+    *,
+    sock: socket,
+    connections: Connections,
+    add_task: AddTask,
+) -> None:
+    del connections[sock.getpeername()]
+    request = sock.recv(1024)
+    if request and b"GET" in request:
+        logger.info("Received GET request")
+        add_task(async_request_sleeper(seconds=1, socket_to_use=sock), None)
+        logger.debug("Added task to queue")
+
+
+def http_get_listener(
+    *,
+    listener_socket: socket,
+    add_task: AddTask,
+) -> Generator[None, None, None]:
+    connections: Connections = dict()
+
+    while True:
+        ready_to_read, _, _ = select.select(
+            [listener_socket] + list(connections.values()), [], [], 0.1
+        )
+        for sock in ready_to_read:
+            if sock is listener_socket:
+                handle_new_connection(sock=listener_socket, connections=connections)
+            else:
+                handle_existing_connection(
+                    sock=sock,
+                    connections=connections,
+                    add_task=add_task,
+                )
+        yield
 
 
 def main() -> None:
