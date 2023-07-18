@@ -2,7 +2,7 @@ import asyncio
 
 from aiohttp import ClientSession
 
-from src.config.const import PORT
+from config.const import PORT
 
 
 async def main() -> None:

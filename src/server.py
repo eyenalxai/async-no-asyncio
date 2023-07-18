@@ -6,8 +6,8 @@ from socket import socket, SOCK_STREAM, AF_INET
 from time import time
 from typing import Any, TypeAlias
 
-from src.config.const import PORT
-from src.config.log import logger
+from config.const import PORT
+from config.log import logger
 
 Task: TypeAlias = Generator[Any, Any, Any]
 
