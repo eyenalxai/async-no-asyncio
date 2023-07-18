@@ -86,11 +86,29 @@ def handle_existing_connection(
     add_task: AddTask,
 ) -> None:
     del connections[sock.getpeername()]
+
     request = sock.recv(1024)
+
     if request and b"GET" in request:
         logger.info("Received GET request")
         add_task(async_request_sleeper(seconds=1, socket_to_use=sock), None)
         logger.debug("Added task to queue")
+
+
+def handle_socket(
+    *,
+    sock: socket,
+    listener_socket: socket,
+    connections: Connections,
+    add_task: AddTask,
+) -> None:
+    (sock is listener_socket) and handle_new_connection(
+        sock=listener_socket, connections=connections
+    )
+
+    (sock is not listener_socket) and handle_existing_connection(
+        sock=sock, connections=connections, add_task=add_task
+    )
 
 
 def http_get_listener(
@@ -102,17 +120,19 @@ def http_get_listener(
 
     while True:
         ready_to_read, _, _ = select.select(
-            [listener_socket] + list(connections.values()), [], [], 0.1
+            [listener_socket] + list(connections.values()),
+            [],
+            [],
+            0.1,
         )
         for sock in ready_to_read:
-            if sock is listener_socket:
-                handle_new_connection(sock=listener_socket, connections=connections)
-            else:
-                handle_existing_connection(
-                    sock=sock,
-                    connections=connections,
-                    add_task=add_task,
-                )
+            handle_socket(
+                sock=sock,
+                listener_socket=listener_socket,
+                connections=connections,
+                add_task=add_task,
+            )
+
         yield
 
 
